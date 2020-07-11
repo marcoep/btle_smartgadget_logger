@@ -35,8 +35,10 @@ class SmartGadgetDownloader(object):
         self.btadapter = pygatt.GATTToolBackend()
 
         # threading: wait until all data is downloaded
-        self.download_done = Event()
-        self.download_done.clear()
+        self.temps_done = Event()
+        self.temps_done.clear()
+        self.humids_done = Event()
+        self.humids_done.clear()
 
         # data storage, newest events are first!
         self.last_temps = []
@@ -72,15 +74,18 @@ class SmartGadgetDownloader(object):
         seq_num, values = self._unpack_SH3T_logger_data(binary_data=binary_data)
         # print("Received temp log #{:d}: {}".format(seq_num, values))
         self.last_temps.extend(values)
-        # signal download done when we don't receive any more values. temperature values get received after humidities
+        # signal download done when we don't receive any more values.
         if len(values) == 0:
-            self.download_done.set()
+            self.temps_done.set()
 
     def _retrieve_humidity_log(self, handle, binary_data):
         # print("Rx of {:d} bytes.".format(len(binary_data)))
         seq_num, values = self._unpack_SH3T_logger_data(binary_data=binary_data)
         # print("Received humid log #{:d}: {}".format(seq_num, values))
         self.last_humids.extend(values)
+        # signal download done when we don't receive any more values.
+        if len(values) == 0:
+            self.humids_done.set()
 
     def _event_tick(self):
 
@@ -124,7 +129,8 @@ class SmartGadgetDownloader(object):
             device.char_write(START_LOGGER_DOWNLOAD_UUID, pack('B', 1))
 
             # wait until download is over
-            self.download_done.wait(55.0)  # we should be done within 55s
+            self.temps_done.wait(55.0)  # we should be done within 55s
+            self.humids_done.wait(55.0)
 
             # step 5: disable upload
             device.char_write(START_LOGGER_DOWNLOAD_UUID, pack('B', 0))
@@ -141,14 +147,14 @@ class SmartGadgetDownloader(object):
         # temperature = unpack('f', temperature_binary)[0]
         # humidity = unpack('f', humidity_binary)[0]
 
+        if len(self.last_temps) != len(self.last_humids):
+            self.lgr.error("Temperatures and humidities lists are not of equal length! Only keeping available pairs!")
+
         # create current timestamps, newest value is first!
         timestamp_now = datetime.now()
         timestamps = [timestamp_now - timedelta(milliseconds=x * logging_interval_ms) for x in
                       range(len(self.last_temps))]
         timestamp_strings = ['{date:%Y-%m-%d_%H%M%S}'.format(date=ts) for ts in timestamps]
-
-        if len(self.last_temps) != len(self.last_humids):
-            self.lgr.error("Temperatures and humidities lists are not of equal length! Only keeping available pairs!")
 
         # reverse all lists since we want to log earliest first
         timestamp_strings.reverse()
