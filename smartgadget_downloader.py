@@ -127,7 +127,6 @@ class SmartGadgetDownloader(object):
             newest_ms_uInt64 = device.char_read(NEWEST_TIMESTAMP_MS_UUID)
             newest_ms = unpack('Q', newest_ms_uInt64)[0]
             delta_now_newest_ms = current_ts_ms - newest_ms
-            print(delta_now_newest_ms)
 
             # step 3: set oldest timestamp to retrieve
 
