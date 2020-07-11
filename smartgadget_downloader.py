@@ -31,7 +31,7 @@ class SmartGadgetDownloader(object):
         self.scheduler.add_listener(self._on_job_error, mask=EVENT_JOB_ERROR)
 
         # gatttool
-        self.btadapter = pygatt.GATTToolBackend()
+        self.btadapter = pygatt.GATTToolBackend(search_window_size=2048)
 
         # data storage
         self.last_temps = []
@@ -80,12 +80,20 @@ class SmartGadgetDownloader(object):
             self.btadapter.start()
             device = self.btadapter.connect('DA:F0:63:93:BE:97', address_type=BLEAddressType.random, timeout=10)
 
+            device.bond()
+
             # temperature_binary = device.char_read(SHT3X_TEMPERATURE_UUID)
             # humidity_binary = device.char_read(SHT3X_HUMIDITY_UUID)
 
             # step 1: subscribe to value characteristics
-            device.subscribe(SHT3X_TEMPERATURE_UUID, callback=self._retrieve_temperature_log, wait_for_response=False)
-            device.subscribe(SHT3X_HUMIDITY_UUID, callback=self._retrieve_humidity_log, wait_for_response=False)
+            device.subscribe(SHT3X_TEMPERATURE_UUID,
+                             callback=self._retrieve_temperature_log,
+                             wait_for_response=False,
+                             indication=True)
+            device.subscribe(SHT3X_HUMIDITY_UUID,
+                             callback=self._retrieve_humidity_log,
+                             wait_for_response=False,
+                             indication=True)
 
             # step 2: write host ms timestamp
             device.char_write(SYNC_TIME_MS_UUID, pack('Q', self._ms_timestamp()))
@@ -122,6 +130,7 @@ class SmartGadgetDownloader(object):
 
 if __name__ == '__main__':
     import logging
+
     lgr = logging.getLogger()
     downloader = SmartGadgetDownloader(lgr)
     downloader._event_tick()
