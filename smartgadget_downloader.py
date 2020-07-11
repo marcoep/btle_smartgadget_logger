@@ -55,9 +55,6 @@ class SmartGadgetDownloader(object):
     def _on_job_error(self, event):
         print("Job Errored:")
         print("-> " + str(event.exception))
-        self.lgr.error("Job Errored:")
-        self.lgr.error(str(event.exception))
-        self.lgr.error("Traceback: " + str(event.traceback))
 
     def _ms_timestamp(self):
         current_ts_dt = datetime.now()
