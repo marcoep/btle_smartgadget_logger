@@ -31,7 +31,7 @@ class SmartGadgetDownloader(object):
         self.scheduler.add_listener(self._on_job_error, mask=EVENT_JOB_ERROR)
 
         # gatttool
-        self.btadapter = pygatt.GATTToolBackend(search_window_size=2048)
+        self.btadapter = pygatt.GATTToolBackend(search_window_size=8192)
 
         # data storage
         self.last_temps = []
@@ -99,13 +99,14 @@ class SmartGadgetDownloader(object):
             device.char_write(SYNC_TIME_MS_UUID, pack('Q', self._ms_timestamp()))
 
             # step 3: set oldest timestamp to retrieve
-            device.char_write(OLDEST_TIMESTAMP_MS_UUID, pack('Q', self._ms_timestamp() - 60000))  # = 1 min in ms
+            # device.char_write(OLDEST_TIMESTAMP_MS_UUID, pack('Q', self._ms_timestamp() - 60000))  # = 1 min in ms
+            device.char_write(OLDEST_TIMESTAMP_MS_UUID, pack('Q', 0))
 
             # step 4: trigger download
             device.char_write(START_LOGGER_DOWNLOAD_UUID, pack('B', 1))
 
             # wait until download is over
-            sleep(10)
+            input("Press enter to continue...")
 
             # step 5: unsub
             device.unsubscribe(SHT3X_TEMPERATURE_UUID, wait_for_response=False)
