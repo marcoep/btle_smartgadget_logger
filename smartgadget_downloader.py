@@ -165,14 +165,14 @@ class SmartGadgetDownloader(object):
         # temperature = unpack('f', temperature_binary)[0]
         # humidity = unpack('f', humidity_binary)[0]
 
-        # print("temps:", self.last_temps, len(self.last_temps))
-        # print("humids:", self.last_humids, len(self.last_humids))
+        self.lgr.info("Retrieved " + str(len(self.last_temps)) + " temp. samples and " +
+                      str(len(self.last_humids)) + " humid. samples.")
 
         if len(self.last_temps) != len(self.last_humids):
             self.lgr.error("Temperatures and humidities lists are not of equal length! Only keeping available pairs!")
 
         # create timestamps, newest value is first!
-        timestamp_newest = datetime.now() - timedelta(milliseconds=delta_now_newest_ms)
+        timestamp_newest = current_ts_dt - timedelta(milliseconds=delta_now_newest_ms)
         timestamps = [timestamp_newest - timedelta(milliseconds=x * logging_interval_ms) for x in
                       range(len(self.last_temps))]
         timestamp_strings = ['{date:%Y-%m-%d_%H%M%S}'.format(date=ts) for ts in timestamps]
@@ -190,9 +190,9 @@ class SmartGadgetDownloader(object):
         self.last_temps = []
         self.last_humids = []
 
-        # finally save our ms timestamp to a file for next start
+        # finally save the timestamp of the last retrieved sample to a file for next start
         with open("last_retrieved_ts.savefile", "w") as fp:
-            fp.write("{:d}".format(current_ts_ms))
+            fp.write("{:d}".format(current_ts_ms - delta_now_newest_ms))
 
 
 if __name__ == '__main__':
