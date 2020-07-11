@@ -148,10 +148,13 @@ class SmartGadgetDownloader(object):
         if len(self.last_temps) != len(self.last_humids):
             self.lgr.error("Temperatures and humidities lists are not of equal length! Only keeping available pairs!")
 
+        # reverse all lists since we want to log earliest first
+        timestamp_strings.reverse()
+        self.last_temps.reverse()
+        self.last_humids.reverse()
+
         with open("values_log.txt", 'a') as fp:
-            for tss, temp, humid in zip(timestamp_strings.reverse(),
-                                        self.last_temps.reverse(),
-                                        self.last_humids.reverse()):
+            for tss, temp, humid in zip(timestamp_strings, self.last_temps, self.last_humids):
                 log_line = "{0:s},{1:.2f},{2:.2f}\n".format(tss, temp, humid)
                 fp.write(log_line)
 
