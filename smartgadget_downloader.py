@@ -55,15 +55,11 @@ class SmartGadgetDownlaoder(object):
         finally:
             self.btadapter.stop()
 
-        temperature = unpack('f', temperature_binary)
-        humidity = unpack('f', humidity_binary)
+        temperature = unpack('f', temperature_binary)[0]
+        humidity = unpack('f', humidity_binary)[0]
         timestamp = datetime.now().isoformat()
 
-        log_line = "{timestamp:s},{temperature:.2f},{humidity:.2f}\n".format(
-            timestamp=timestamp,
-            temperature=temperature,
-            humidity=humidity
-        )
+        log_line = "{0:s},{1:.2f},{2:.2f}\n".format(timestamp, temperature, humidity)
 
         with open("smartgadget_log.txt", 'a') as fp:
             fp.write(log_line)
