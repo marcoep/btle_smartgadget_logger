@@ -140,6 +140,9 @@ class SmartGadgetDownloader(object):
             if start_ts_ms is None:
                 start_ts_ms = current_ts_ms - 120000  # = 2 min in ms
 
+            # to make sure that we retrieve all samples, give it a 9s overlap
+            start_ts_ms = start_ts_ms - 9000
+
             device.char_write(OLDEST_TIMESTAMP_MS_UUID, pack('Q', start_ts_ms))
             # device.char_write(OLDEST_TIMESTAMP_MS_UUID, pack('Q', 0))
 
