@@ -147,6 +147,9 @@ class SmartGadgetDownloader(object):
         # temperature = unpack('f', temperature_binary)[0]
         # humidity = unpack('f', humidity_binary)[0]
 
+        print("temps:", self.last_temps)
+        print("humids:", self.last_humids)
+
         if len(self.last_temps) != len(self.last_humids):
             self.lgr.error("Temperatures and humidities lists are not of equal length! Only keeping available pairs!")
 
