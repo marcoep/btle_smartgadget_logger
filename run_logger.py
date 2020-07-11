@@ -15,7 +15,8 @@ def init_logging():
 
     lgr = logging.getLogger()
 
-    lgr.setLevel(logging.DEBUG)
+    lgr.setLevel(logging.INFO)
+    logging.getLogger('pygatt').setLevel(logging.WARNING)
 
     # clear all existing handlers
     hlist = list(lgr.handlers)

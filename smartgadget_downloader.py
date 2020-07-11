@@ -60,7 +60,9 @@ class SmartGadgetDownloader(object):
         self.lgr.error("Traceback: " + str(event.traceback))
 
     def _ms_timestamp(self):
-        return int(round(time() * 1000))
+        current_ts_dt = datetime.now()
+        current_ts_ms = int(round(current_ts_dt.timestamp()))
+        return current_ts_ms, current_ts_dt
 
     def _unpack_SH3T_logger_data(self, binary_data):
         seq_num_binary = binary_data[0:4]
@@ -116,13 +118,29 @@ class SmartGadgetDownloader(object):
                              callback=self._retrieve_humidity_log,
                              wait_for_response=False)
 
-            current_ts_ms = self._ms_timestamp()
+            current_ts_ms, current_ts_dt = self._ms_timestamp()
 
             # step 2: write host ms timestamp
             device.char_write(SYNC_TIME_MS_UUID, pack('Q', current_ts_ms))
 
+            # step 2.5: read newest available timestamp, so we know when to start to create the timestamps
+            newest_ms_uInt64 = device.char_read(NEWEST_TIMESTAMP_MS_UUID)
+            newest_ms = unpack('Q', newest_ms_uInt64)[0]
+            delta_now_newest_ms = current_ts_ms - newest_ms
+            print(delta_now_newest_ms)
+
             # step 3: set oldest timestamp to retrieve
-            device.char_write(OLDEST_TIMESTAMP_MS_UUID, pack('Q', current_ts_ms - 120000))  # = 2 min in ms
+
+            start_ts_ms = None
+            try:
+                with open("last_retrieved_ts.savefile", "w") as fp:
+                    start_ts_ms = int(fp.read())
+            except:
+                self.lgr.info("Did not find last retrieved ts file, generating new value 2 mins ago.")
+            if start_ts_ms is None:
+                start_ts_ms = current_ts_ms - 120000  # = 2 min in ms
+
+            device.char_write(OLDEST_TIMESTAMP_MS_UUID, pack('Q', start_ts_ms))
             # device.char_write(OLDEST_TIMESTAMP_MS_UUID, pack('Q', 0))
 
             # step 4: trigger download
@@ -147,15 +165,15 @@ class SmartGadgetDownloader(object):
         # temperature = unpack('f', temperature_binary)[0]
         # humidity = unpack('f', humidity_binary)[0]
 
-        print("temps:", self.last_temps, len(self.last_temps))
-        print("humids:", self.last_humids, len(self.last_humids))
+        # print("temps:", self.last_temps, len(self.last_temps))
+        # print("humids:", self.last_humids, len(self.last_humids))
 
         if len(self.last_temps) != len(self.last_humids):
             self.lgr.error("Temperatures and humidities lists are not of equal length! Only keeping available pairs!")
 
-        # create current timestamps, newest value is first!
-        timestamp_now = datetime.now()
-        timestamps = [timestamp_now - timedelta(milliseconds=x * logging_interval_ms) for x in
+        # create timestamps, newest value is first!
+        timestamp_newest = datetime.now() - timedelta(milliseconds=delta_now_newest_ms)
+        timestamps = [timestamp_newest - timedelta(milliseconds=x * logging_interval_ms) for x in
                       range(len(self.last_temps))]
         timestamp_strings = ['{date:%Y-%m-%d_%H%M%S}'.format(date=ts) for ts in timestamps]
 
@@ -171,6 +189,10 @@ class SmartGadgetDownloader(object):
 
         self.last_temps = []
         self.last_humids = []
+
+        # finally save our ms timestamp to a file for next start
+        with open("last_retrieved_ts.savefile", "w") as fp:
+            fp.write(":d".format(current_ts_ms))
 
 
 if __name__ == '__main__':
