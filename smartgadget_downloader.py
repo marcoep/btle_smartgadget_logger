@@ -26,7 +26,7 @@ class SmartGadgetDownloader(object):
 
         # specify scheduler
         self.scheduler = BackgroundScheduler()
-        self.scheduler.add_job(self._event_tick, 'cron', minute='*/1', second='10')
+        self.scheduler.add_job(self._event_tick, 'cron', minute='*/3', second='10')
 
         # add error listener for logging
         self.scheduler.add_listener(self._on_job_error, mask=EVENT_JOB_ERROR)
