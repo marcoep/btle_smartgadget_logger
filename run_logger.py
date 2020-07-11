@@ -10,9 +10,30 @@ import traceback
 
 from smartgadget_downloader import SmartGadgetDownloader
 
-if __name__ == "__main__":
+
+def init_logging():
 
     lgr = logging.getLogger()
+
+    lgr.setLevel(logging.DEBUG)
+
+    # clear all existing handlers
+    hlist = list(lgr.handlers)
+    for h in hlist:
+        h.close()
+        lgr.removeHandler(h)
+
+    handler = logging.handlers.RotatingFileHandler('./smartgadget_downloader.log', maxBytes=20000000, backupCount=10)
+    formatter = logging.Formatter(fmt="{asctime} [{levelname:8s}]: {module}.{funcName}() {message}", style="{")
+    handler.setFormatter(formatter)
+    lgr.addHandler(handler)
+
+    return lgr
+
+
+if __name__ == "__main__":
+
+    lgr = init_logging()
 
     # start gui application
     downloader = SmartGadgetDownloader(lgr)
