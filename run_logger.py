@@ -5,6 +5,7 @@ Marco Eppenberger, 2020
 
 # python package imports
 import logging
+import logging.handlers
 import sys
 import traceback
 
