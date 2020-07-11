@@ -12,6 +12,8 @@ from apscheduler.events import EVENT_JOB_ERROR
 import pygatt
 from pygatt.backends import BLEAddressType
 
+from smartgadget_bt_constants import *
+
 
 class SmartGadgetDownlaoder(object):
 
@@ -50,16 +52,17 @@ class SmartGadgetDownlaoder(object):
         try:
             self.btadapter.start()
             device = self.btadapter.connect('DA:F0:63:93:BE:97', address_type=BLEAddressType.random)
-            temperature_binary = device.char_read("00002235-b38d-4985-720e-0f993a68ee41")
-            humidity_binary = device.char_read("00001235-b38d-4985-720e-0f993a68ee41")
+            temperature_binary = device.char_read(SHT3X_TEMPERATURE_UUID)
+            humidity_binary = device.char_read(SHT3X_HUMIDITY_UUID)
         finally:
             self.btadapter.stop()
 
         temperature = unpack('f', temperature_binary)[0]
         humidity = unpack('f', humidity_binary)[0]
-        timestamp = datetime.now().isoformat()
+
+        timestamp = str('{date:%Y-%m-%d_%H%M%S}'.format(date=datetime.now()))
 
         log_line = "{0:s},{1:.2f},{2:.2f}\n".format(timestamp, temperature, humidity)
 
-        with open("smartgadget_log.txt", 'a') as fp:
+        with open("values_log.txt", 'a') as fp:
             fp.write(log_line)
