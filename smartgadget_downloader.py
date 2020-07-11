@@ -88,10 +88,10 @@ class SmartGadgetDownloader(object):
             device.subscribe(SHT3X_HUMIDITY_UUID, callback=self._retrieve_humidity_log, wait_for_response=False)
 
             # step 2: write host ms timestamp
-            device.char_write(SYNC_TIME_MS_UUID, pack('I', self._ms_timestamp()))
+            device.char_write(SYNC_TIME_MS_UUID, pack('Q', self._ms_timestamp()))
 
             # step 3: set oldest timestamp to retrieve
-            device.char_write(OLDEST_TIMESTAMP_MS_UUID, pack('I', self._ms_timestamp() - 60000))  # = 1 min in ms
+            device.char_write(OLDEST_TIMESTAMP_MS_UUID, pack('Q', self._ms_timestamp() - 60000))  # = 1 min in ms
 
             # step 4: trigger download
             device.char_write(START_LOGGER_DOWNLOAD_UUID, pack('c', 1))
