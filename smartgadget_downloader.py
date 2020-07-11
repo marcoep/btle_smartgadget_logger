@@ -3,7 +3,7 @@
 Marco Eppenberger, 2020
 """
 
-from struct import unpack, pack
+from struct import unpack, pack, iter_unpack
 from datetime import datetime
 from time import time, sleep
 
@@ -31,7 +31,8 @@ class SmartGadgetDownloader(object):
         self.scheduler.add_listener(self._on_job_error, mask=EVENT_JOB_ERROR)
 
         # gatttool
-        self.btadapter = pygatt.GATTToolBackend(search_window_size=8192)
+        gattoollog = open('./gatttoollog.txt', 'ab')
+        self.btadapter = pygatt.GATTToolBackend(gatttool_logfile=gattoollog)
 
         # data storage
         self.last_temps = []
@@ -59,7 +60,7 @@ class SmartGadgetDownloader(object):
         seq_num_binary = binary_data[0:4]
         seq_num = unpack('I', seq_num_binary)[0]
         values_binary = binary_data[4:]
-        values = unpack('f', values_binary)
+        values = [x[0] for x in iter_unpack('f', values_binary)]
         return seq_num, values
 
     def _retrieve_temperature_log(self, handle, binary_data):
@@ -80,27 +81,23 @@ class SmartGadgetDownloader(object):
             self.btadapter.start()
             device = self.btadapter.connect('DA:F0:63:93:BE:97', address_type=BLEAddressType.random, timeout=10)
 
-            device.bond()
-
             # temperature_binary = device.char_read(SHT3X_TEMPERATURE_UUID)
             # humidity_binary = device.char_read(SHT3X_HUMIDITY_UUID)
 
             # step 1: subscribe to value characteristics
             device.subscribe(SHT3X_TEMPERATURE_UUID,
                              callback=self._retrieve_temperature_log,
-                             wait_for_response=False,
-                             indication=True)
+                             wait_for_response=False)
             device.subscribe(SHT3X_HUMIDITY_UUID,
                              callback=self._retrieve_humidity_log,
-                             wait_for_response=False,
-                             indication=True)
+                             wait_for_response=False)
 
             # step 2: write host ms timestamp
             device.char_write(SYNC_TIME_MS_UUID, pack('Q', self._ms_timestamp()))
 
             # step 3: set oldest timestamp to retrieve
-            # device.char_write(OLDEST_TIMESTAMP_MS_UUID, pack('Q', self._ms_timestamp() - 60000))  # = 1 min in ms
-            device.char_write(OLDEST_TIMESTAMP_MS_UUID, pack('Q', 0))
+            device.char_write(OLDEST_TIMESTAMP_MS_UUID, pack('Q', self._ms_timestamp() - 65000))  # = 1 min in ms
+            # device.char_write(OLDEST_TIMESTAMP_MS_UUID, pack('Q', 0))
 
             # step 4: trigger download
             device.char_write(START_LOGGER_DOWNLOAD_UUID, pack('B', 1))
@@ -108,11 +105,15 @@ class SmartGadgetDownloader(object):
             # wait until download is over
             input("Press enter to continue...")
 
-            # step 5: unsub
+            # step 5: disable upload
+            device.char_write(START_LOGGER_DOWNLOAD_UUID, pack('B', 0))
+
+            # step 6: unsub
             device.unsubscribe(SHT3X_TEMPERATURE_UUID, wait_for_response=False)
             device.unsubscribe(SHT3X_HUMIDITY_UUID, wait_for_response=False)
 
         finally:
+            print("Finally clause. Stopping bt adaptor.")
             self.btadapter.stop()
 
         # temperature = unpack('f', temperature_binary)[0]
@@ -131,6 +132,9 @@ class SmartGadgetDownloader(object):
 
 if __name__ == '__main__':
     import logging
+
+    logging.basicConfig()
+    logging.getLogger('pygatt').setLevel(logging.DEBUG)
 
     lgr = logging.getLogger()
     downloader = SmartGadgetDownloader(lgr)

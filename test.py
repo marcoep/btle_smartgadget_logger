@@ -8,9 +8,10 @@ adapter = pygatt.GATTToolBackend()
 try:
     adapter.start()
     device = adapter.connect('DA:F0:63:93:BE:97',  address_type=BLEAddressType.random)
-    value = device.char_read("00002235-b38d-4985-720e-0f993a68ee41")
+    # device.char_write("0000F239-B38D-4985-720E-0F993A68EE41", struct.pack('I', 10000))
+    value = device.char_read("0000F239-B38D-4985-720E-0F993A68EE41")
 finally:
     adapter.stop()
 
 print(value)
-print(struct.unpack('f', value))
+print(struct.unpack('I', value))
