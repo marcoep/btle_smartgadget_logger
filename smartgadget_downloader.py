@@ -16,7 +16,7 @@ from pygatt.backends import BLEAddressType
 from smartgadget_bt_constants import *
 
 
-class SmartGadgetDownlaoder(object):
+class SmartGadgetDownloader(object):
 
     def __init__(self, logger):
 
@@ -114,3 +114,10 @@ class SmartGadgetDownlaoder(object):
 
         self.last_temps = []
         self.last_humids = []
+
+
+if __name__ == '__main__':
+    import logging
+    lgr = logging.getLogger()
+    downloader = SmartGadgetDownloader(lgr)
+    downloader._event_tick()

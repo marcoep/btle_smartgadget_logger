@@ -8,14 +8,14 @@ import logging
 import sys
 import traceback
 
-from smartgadget_downloader import SmartGadgetDownlaoder
+from smartgadget_downloader import SmartGadgetDownloader
 
 if __name__ == "__main__":
 
     lgr = logging.getLogger()
 
     # start gui application
-    downloader = SmartGadgetDownlaoder(lgr)
+    downloader = SmartGadgetDownloader(lgr)
     try:
         downloader.start()
         print("EventPlayer Started. Press Ctrl+C to quit.")
