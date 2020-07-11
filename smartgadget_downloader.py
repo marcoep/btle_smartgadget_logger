@@ -61,7 +61,7 @@ class SmartGadgetDownloader(object):
 
     def _ms_timestamp(self):
         current_ts_dt = datetime.now()
-        current_ts_ms = int(round(current_ts_dt.timestamp()))
+        current_ts_ms = int(round(current_ts_dt.timestamp() * 1000))
         return current_ts_ms, current_ts_dt
 
     def _unpack_SH3T_logger_data(self, binary_data):
@@ -133,7 +133,7 @@ class SmartGadgetDownloader(object):
 
             start_ts_ms = None
             try:
-                with open("last_retrieved_ts.savefile", "w") as fp:
+                with open("last_retrieved_ts.savefile", "r") as fp:
                     start_ts_ms = int(fp.read())
             except:
                 self.lgr.info("Did not find last retrieved ts file, generating new value 2 mins ago.")
