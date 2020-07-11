@@ -122,7 +122,7 @@ class SmartGadgetDownloader(object):
             device.char_write(SYNC_TIME_MS_UUID, pack('Q', current_ts_ms))
 
             # step 3: set oldest timestamp to retrieve
-            device.char_write(OLDEST_TIMESTAMP_MS_UUID, pack('Q', current_ts_ms - 600000))  # = 10 min in ms
+            device.char_write(OLDEST_TIMESTAMP_MS_UUID, pack('Q', current_ts_ms - 120000))  # = 2 min in ms
             # device.char_write(OLDEST_TIMESTAMP_MS_UUID, pack('Q', 0))
 
             # step 4: trigger download
