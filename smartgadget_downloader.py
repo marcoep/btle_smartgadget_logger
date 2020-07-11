@@ -192,7 +192,7 @@ class SmartGadgetDownloader(object):
 
         # finally save our ms timestamp to a file for next start
         with open("last_retrieved_ts.savefile", "w") as fp:
-            fp.write(":d".format(current_ts_ms))
+            fp.write("{:d}".format(current_ts_ms))
 
 
 if __name__ == '__main__':
