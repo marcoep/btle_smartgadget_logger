@@ -78,7 +78,7 @@ class SmartGadgetDownloader(object):
 
         try:
             self.btadapter.start()
-            device = self.btadapter.connect('DA:F0:63:93:BE:97', address_type=BLEAddressType.random)
+            device = self.btadapter.connect('DA:F0:63:93:BE:97', address_type=BLEAddressType.random, timeout=10)
 
             # temperature_binary = device.char_read(SHT3X_TEMPERATURE_UUID)
             # humidity_binary = device.char_read(SHT3X_HUMIDITY_UUID)
@@ -94,7 +94,7 @@ class SmartGadgetDownloader(object):
             device.char_write(OLDEST_TIMESTAMP_MS_UUID, pack('Q', self._ms_timestamp() - 60000))  # = 1 min in ms
 
             # step 4: trigger download
-            device.char_write(START_LOGGER_DOWNLOAD_UUID, pack('c', 1))
+            device.char_write(START_LOGGER_DOWNLOAD_UUID, pack('B', 1))
 
             # wait until download is over
             sleep(10)
