@@ -84,8 +84,8 @@ class SmartGadgetDownloader(object):
             # humidity_binary = device.char_read(SHT3X_HUMIDITY_UUID)
 
             # step 1: subscribe to value characteristics
-            device.subscribe(SHT3X_TEMPERATURE_UUID, callback=self._retrieve_temperature_log)
-            device.subscribe(SHT3X_HUMIDITY_UUID, callback=self._retrieve_humidity_log)
+            device.subscribe(SHT3X_TEMPERATURE_UUID, callback=self._retrieve_temperature_log, wait_for_response=False)
+            device.subscribe(SHT3X_HUMIDITY_UUID, callback=self._retrieve_humidity_log, wait_for_response=False)
 
             # step 2: write host ms timestamp
             device.char_write(SYNC_TIME_MS_UUID, pack('I', self._ms_timestamp()))
@@ -98,6 +98,10 @@ class SmartGadgetDownloader(object):
 
             # wait until download is over
             sleep(10)
+
+            # step 5: unsub
+            device.unsubscribe(SHT3X_TEMPERATURE_UUID, wait_for_response=False)
+            device.unsubscribe(SHT3X_HUMIDITY_UUID, wait_for_response=False)
 
         finally:
             self.btadapter.stop()
